@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+APP_NAME = ARGV[0]
+CURRENT_DIRECTORY = `pwd`
+
+raise "You forgot to name the app" if APP_NAME.nil?
+
+`mkdir #{APP_NAME}`
+
+Dir.chdir(APP_NAME){
+  `rvm use 2.5.0`
+  `bundle init`
+  `echo "source 'https://rubygems.org'" > Gemfile`
+  `echo "ruby '2.5.0'" >> Gemfile`
+  `echo "gem 'rspec'" >> Gemfile`
+  `bundle`
+  `rspec --init`
+  `mkdir lib`
+  exec("sublime .")
+}

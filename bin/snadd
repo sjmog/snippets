@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+PATH = '~/documents/code/snippets/bin'.freeze
+NAME = ARGV[0]
+SNIPPET = "#{PATH}/#{NAME}"
+
+raise "You forgot the snippet name" if SNIPPET.nil?
+
+`touch #{SNIPPET}`
+`echo "#!/usr/bin/env ruby" >> #{SNIPPET}`
+`chmod 755 #{SNIPPET}`
+exec("vi #{SNIPPET}")
