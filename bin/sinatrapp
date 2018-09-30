@@ -5,10 +5,14 @@ CURRENT_DIRECTORY = `pwd`
 
 def app_contents
 %(require 'sinatra/base'
+require 'sinatra/flash'
 
 class #{APP_NAME} < Sinatra::Base
+  enable :sessions
+  register Sinatra::Flash
+
   get '/' do
-    'Hello World'
+    erb :index
   end
 
   run! if app_file == ARGV[0]
@@ -16,7 +20,10 @@ end)
 end
 
 def rackup_contents
-%(require_relative './app'
+%(require './app/server'
+require 'dotenv'
+
+Dotenv.load
 
 run #{APP_NAME})
 end
@@ -24,7 +31,7 @@ end
 def spec_helper_contents
 %(ENV['RACK_ENV'] = 'test'
 
-require File.join(File.dirname(__FILE__), '..', 'app.rb')
+require File.join(File.dirname(__FILE__), '..', 'app', 'server.rb')
 
 require 'capybara'
 require 'capybara/rspec'
@@ -39,10 +46,71 @@ def hello_world_spec_contents
 %(feature 'Test feature' do
   scenario 'Hello World' do
     visit '/'
-    expect(page).to have_content 'Hello World'
+    expect(page).to have_content 'Hello, World'
   end
 end
 )
+end
+
+def styles_contents
+%(html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+body {
+  line-height: 1;
+}
+ol, ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+)
+end
+
+def layout_contents
+  %(<!DOCTYPE html>
+<html>
+<head>
+  <title>#{APP_NAME}</title>
+  <link rel='stylesheet' type='text/css' href='styles.css'>
+</head>
+<body>
+<%= yield %>
+</body>
+</html>
+  )
 end
 
 raise "You forgot to name the app" if APP_NAME.nil?
@@ -57,15 +125,27 @@ Dir.chdir(APP_NAME){
   `echo "gem 'rspec'" >> Gemfile`
   `echo "gem 'sinatra'" >> Gemfile`
   `echo "gem 'capybara'" >> Gemfile`
+  `echo "gem 'dotenv'" >> Gemfile`
+  `echo "gem 'sinatra-flash'" >> Gemfile`
   `bundle`
   `rspec --init`
-  `touch app.rb`
-  `echo "#{app_contents}" >> app.rb`
+  `touch .env`
+  `mkdir app`
+  `touch app/server.rb`
+  `echo "#{app_contents}" >> app/server.rb`
   `touch config.ru`
   `echo "#{rackup_contents}" >> config.ru`
   `echo "#{spec_helper_contents}$(cat spec/spec_helper.rb)" > spec/spec_helper.rb`
   `mkdir spec/features`
   `touch spec/features/hello_world_spec.rb`
   `echo "#{hello_world_spec_contents}" >> spec/features/hello_world_spec.rb`
+  `mkdir app/views`
+  `touch app/views/index.erb`
+  `echo "Hello, World" >> app/views/index.erb`
+  `touch app/views/layout.erb`
+  `echo "#{layout_contents}" >> app/views/layout.erb`
+  `mkdir app/public`
+  `touch app/public/styles.css`
+  `echo "#{styles_contents}" >> app/public/styles.css`
   exec("sublime .")
 }
