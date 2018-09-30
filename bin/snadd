@@ -9,4 +9,4 @@ raise "You forgot the snippet name" if SNIPPET.nil?
 `touch #{SNIPPET}`
 `echo "#!/usr/bin/env ruby" >> #{SNIPPET}`
 `chmod 755 #{SNIPPET}`
-exec("vi #{SNIPPET}")
+exec("sublime #{SNIPPET}")
