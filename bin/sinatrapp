@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+APP_NAME = ARGV[0]
+CURRENT_DIRECTORY = `pwd`
+
+def app_contents
+%(require 'sinatra/base'
+
+class #{APP_NAME} < Sinatra::Base
+  get '/' do
+    'Hello World'
+  end
+
+  run! if app_file == ARGV[0]
+end)
+end
+
+def rackup_contents
+%(require_relative './app'
+
+run #{APP_NAME})
+end
+
+def spec_helper_contents
+%(ENV['RACK_ENV'] = 'test'
+
+require File.join(File.dirname(__FILE__), '..', 'app.rb')
+
+require 'capybara'
+require 'capybara/rspec'
+require 'rspec'
+
+Capybara.app = #{APP_NAME}
+
+)
+end
+
+def hello_world_spec_contents
+%(feature 'Test feature' do
+  scenario 'Hello World' do
+    visit '/'
+    expect(page).to have_content 'Hello World'
+  end
+end
+)
+end
+
+raise "You forgot to name the app" if APP_NAME.nil?
+
+`mkdir #{APP_NAME}`
+
+Dir.chdir(APP_NAME){
+  `rvm use 2.5.0`
+  `bundle init`
+  `echo "source 'https://rubygems.org'" > Gemfile`
+  `echo "ruby '2.5.0'" >> Gemfile`
+  `echo "gem 'rspec'" >> Gemfile`
+  `echo "gem 'sinatra'" >> Gemfile`
+  `echo "gem 'capybara'" >> Gemfile`
+  `bundle`
+  `rspec --init`
+  `touch app.rb`
+  `echo "#{app_contents}" >> app.rb`
+  `touch config.ru`
+  `echo "#{rackup_contents}" >> config.ru`
+  `echo "#{spec_helper_contents}$(cat spec/spec_helper.rb)" > spec/spec_helper.rb`
+  `mkdir spec/features`
+  `touch spec/features/hello_world_spec.rb`
+  `echo "#{hello_world_spec_contents}" >> spec/features/hello_world_spec.rb`
+  exec("sublime .")
+}
